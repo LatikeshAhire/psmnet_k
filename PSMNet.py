@@ -342,31 +342,39 @@ class PSMNet:
 
     def _build_conv_block(self, inputs, conv_function, filters, kernel_size, strides=1, dilation_rate=None,
                           layer_name='conv', apply_bn=True, apply_relu=True, reuse=False):
-        # 构建卷积块
         conv_param = {
             'padding': 'same',
-            'kernel_initializer': tf.keras.initializers.glorot_normal(),
-            'kernel_regularizer': tf.keras.regularizers.L2(config.L2_REG),
-            'bias_regularizer': tf.keras.regularizers.L2(config.L2_REG),
+            'kernel_initializer': tf.compat.v1.keras.initializers.glorot_normal(),
+            'kernel_regularizer': tf.compat.v1.keras.regularizers.L2(config.L2_REG),
+            'bias_regularizer': tf.compat.v1.keras.regularizers.L2(config.L2_REG),
+        }
+        conv_param2 = {
+            'padding': 'same',
+            'kernel_initializer': tf.compat.v1.keras.initializers.glorot_normal(),
+            'kernel_regularizer': tf.compat.v1.keras.regularizers.L2(config.L2_REG),
+            'bias_regularizer': tf.compat.v1.keras.regularizers.L2(config.L2_REG),
             'reuse': reuse
         }
         if dilation_rate:
             conv_param['dilation_rate'] = dilation_rate
-        # 构建卷积块
-        with tf.variable_scope(layer_name):
-            # 卷积
-            outputs = conv_function(inputs, filters, kernel_size, strides, **conv_param)
+        # Building Convolutional Blocks
+        with tf.compat.v1.variable_scope(layer_name):
+            # convolution
+            if conv_function==tf.compat.v1.layers.conv2d:
+                outputs = SeparableConv2D( filters, kernel_size, strides, **conv_param)(inputs)
+            else:
+                outputs = conv_function(inputs, filters, kernel_size, strides, **conv_param2)
 
             # bn
             if apply_bn:
-                outputs = tf.layers.batch_normalization(
-                    outputs, training=tf.get_default_graph().get_tensor_by_name('is_training:0'),
+                outputs = tf.compat.v1.layers.batch_normalization(
+                    outputs, training=tf.compat.v1.get_default_graph().get_tensor_by_name('is_training:0'),
                     reuse=reuse, name='bn'
                 )
 
-            # 激活函数
+            # activation function
             if apply_relu:
-                outputs = tf.nn.relu(outputs)
+                outputs = tf.compat.v1.nn.relu(outputs)
 
             return outputs
 
