@@ -3,7 +3,7 @@ import re
 import numpy as np
 
 import config
-
+import copy
 
 def compute_npx_error(prediction, gt, n):
     # computing n-px error
